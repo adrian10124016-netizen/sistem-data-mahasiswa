@@ -1,73 +1,82 @@
 <?php
 session_start();
-include 'koneksi.php';
 
-if (!isset($_SESSION['login'])) {
+if (!isset($_SESSION['username'])) {
     header("Location: login.php");
-    exit;
+    exit();
 }
 
-$result = mysqli_query($koneksi, "SELECT * FROM mahasiswa ORDER BY id DESC");
-?>
+require_once 'koneksi.php';
 
+$query = "SELECT * FROM mahasiswa ORDER BY id DESC";
+$result = mysqli_query($koneksi, $query);
+?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= $_SESSION['lang']; ?>">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - Sistem Data Mahasiswa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $txt['title_dashboard']; ?></title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="card-container">
-    <div class="header">
-        <div>
-            <h2>Sistem Data Mahasiswa</h2>
-            <p style="color: #666; font-size: 13px;">Kelola informasi mahasiswa secara online</p>
+    <div class="container">
+        <!-- Pengubah Bahasa & Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><?= $txt['title_dashboard']; ?></h2>
+            <div style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px;">
+                <span>🌐 </span>
+                <a href="?lang=id" style="font-weight: <?= $_SESSION['lang'] == 'id' ? 'bold' : 'normal' ?>; text-decoration: none; color: inherit;">🇮🇩 ID</a> | 
+                <a href="?lang=en" style="font-weight: <?= $_SESSION['lang'] == 'en' ? 'bold' : 'normal' ?>; text-decoration: none; color: inherit;">🇬🇧 EN</a>
+            </div>
         </div>
-        <div>
-            <span style="margin-right: 10px; font-size: 14px;">Halo, <b><?= $_SESSION['username']; ?></b></span>
-            <a href="logout.php" class="btn btn-logout" onclick="return confirm('Yakin ingin keluar?')">Logout</a>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <p><?= $txt['welcome']; ?>, <strong><?= htmlspecialchars($_SESSION['username']); ?></strong>!</p>
+            <div>
+                <a href="tambah.php" class="btn btn-primary" style="margin-right: 10px;">+ <?= $txt['tambah_data']; ?></a>
+                <a href="logout.php" class="btn btn-danger"><?= $txt['logout']; ?></a>
+            </div>
         </div>
-    </div>
 
-    <a href="tambah.php" class="btn btn-add">+ Tambah Mahasiswa Baru</a>
-
-    <table>
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>NIM</th>
-                <th>Nama</th>
-                <th>Jurusan</th>
-                <th>Email</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php $no = 1; ?>
-            <?php if (mysqli_num_rows($result) > 0): ?>
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td><?= $no++; ?></td>
-                        <td><b><?= $row['nim']; ?></b></td>
-                        <td><?= $row['nama']; ?></td>
-                        <td><?= $row['jurusan']; ?></td>
-                        <td><?= $row['email']; ?></td>
-                        <td>
-                            <a href="edit.php?id=<?= $row['id']; ?>" class="btn btn-edit">Edit</a>
-                            <a href="hapus.php?id=<?= $row['id']; ?>" class="btn btn-delete" onclick="return confirm('Yakin hapus data ini?')">Hapus</a>
-                        </td>
-                    </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
+        <table>
+            <thead>
                 <tr>
-                    <td colspan="6" style="text-align: center; color: #888; padding: 30px;">Belum ada data mahasiswa terdaftar.</td>
+                    <th>No</th>
+                    <th><?= $txt['nim']; ?></th>
+                    <th><?= $txt['nama']; ?></th>
+                    <th><?= $txt['jurusan']; ?></th>
+                    <th><?= $txt['email']; ?></th>
+                    <th><?= $txt['aksi']; ?></th>
                 </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</div>
-
+            </thead>
+            <tbody>
+                <?php 
+                $no = 1;
+                if ($result && mysqli_num_rows($result) > 0):
+                    while ($row = mysqli_fetch_assoc($result)): 
+                ?>
+                <tr>
+                    <td><?= $no++; ?></td>
+                    <td><?= htmlspecialchars($row['nim']); ?></td>
+                    <td><?= htmlspecialchars($row['nama']); ?></td>
+                    <td><?= htmlspecialchars($row['jurusan']); ?></td>
+                    <td><?= htmlspecialchars($row['email']); ?></td>
+                    <td>
+                        <a href="edit.php?id=<?= $row['id']; ?>" class="btn btn-edit"><?= $txt['edit']; ?></a>
+                        <a href="hapus.php?id=<?= $row['id']; ?>" class="btn btn-delete" onclick="return confirm('<?= $txt['konfirmasi_hapus']; ?>')"><?= $txt['hapus']; ?></a>
+                    </td>
+                </tr>
+                <?php 
+                    endwhile; 
+                else:
+                ?>
+                <tr>
+                    <td colspan="6" style="text-align: center;">Data tidak ditemukan / Kosong.</td>
+                </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
